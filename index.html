@@ -1,493 +1,596 @@
-﻿<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Lori - Senior Software Engineer @ 99.co. Go, Python, Systems at Scale.">
-  <meta name="keywords"
-    content="backend engineer, software engineer, Go, Python, microservices, portfolio, Lori">
-  <meta name="author" content="Lori">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>lori@chud-lori.github.io:~$</title>
+<meta name="description" content="You stripped the path off a project URL. Respect. — A terminal-style index of Lori's GitHub projects and links." />
+<meta name="theme-color" content="#0a0d0a" />
 
-  <title>Lori - Senior Software Engineer</title>
+<meta property="og:title" content="lori@chud-lori.github.io:~$" />
+<meta property="og:description" content="You stripped the path. Respect. Type `help` to see what's here." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://chud-lori.github.io/" />
+<meta name="twitter:card" content="summary" />
 
-  <!-- Web Fonts -->
-  <link href='http://fonts.googleapis.com/css?family=Roboto:400,300,500,700' rel='stylesheet' type='text/css'>
-  <!-- Bootstrap core CSS -->
-  <link href="assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
-  <!-- Font Awesome CSS -->
-  <link href="assets/css/font-awesome.min.css" rel="stylesheet" media="screen">
-  <!-- Animate css -->
-  <link href="assets/css/animate.css" rel="stylesheet">
-  <!-- Magnific css -->
-  <link href="assets/css/magnific-popup.css" rel="stylesheet">
-  <!-- Custom styles CSS -->
-  <link href="assets/css/style.css" rel="stylesheet" media="screen">
-  <!-- Responsive CSS -->
-  <link href="assets/css/responsive.css" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0d0a;
+  --fg: #4af56b;
+  --fg-dim: #2a8f3e;
+  --fg-bright: #b4ffc6;
+  --warn: #ffb14a;
+  --err: #ff5a5a;
+  --font: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+}
+/* Amber palette swap, applied by the Konami egg. */
+body.amber {
+  --fg: #ffb454;
+  --fg-dim: #a16a18;
+  --fg-bright: #ffe0a8;
+}
 
-  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-  <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-  <![endif]-->
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; width: 100%; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.45;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
 
-  <!-- <link rel="shortcut icon" href="assets/images/ico/favicon.png"> -->
-  <link rel="apple-touch-icon-precomposed" sizes="144x144"
-    href="assets/images/ico/apple-touch-icon-144-precomposed.png">
-  <link rel="apple-touch-icon-precomposed" sizes="114x114"
-    href="assets/images/ico/apple-touch-icon-114-precomposed.png">
-  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/images/ico/apple-touch-icon-72-precomposed.png">
-  <link rel="apple-touch-icon-precomposed" href="assets/images/ico/apple-touch-icon-57-precomposed.png">
+/* CRT chrome — scanlines + vignette + flicker. All overlays, none block input. */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.025) 0px,
+    rgba(255,255,255,0.025) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: overlay;
+}
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  98% { opacity: 1; }
+  99% { opacity: 0.93; }
+}
+.screen { animation: flicker 6s infinite; }
 
+#screen {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  padding: 24px 28px;
+  overflow-y: auto;
+  z-index: 1;
+  text-shadow: 0 0 6px rgba(74, 245, 107, 0.35);
+}
+body.amber #screen { text-shadow: 0 0 6px rgba(255, 180, 84, 0.4); }
+
+#output { white-space: pre-wrap; word-break: break-word; }
+.line { white-space: pre-wrap; word-break: break-word; }
+.echo .prompt { color: var(--fg-dim); }
+.echo .cmd-text { color: var(--fg-bright); }
+.dim { color: var(--fg-dim); }
+.bright { color: var(--fg-bright); }
+.warn { color: var(--warn); }
+.err { color: var(--err); }
+a { color: var(--fg-bright); text-decoration: underline; text-decoration-color: var(--fg-dim); }
+a:hover { color: var(--bg); background: var(--fg-bright); text-decoration: none; }
+
+#prompt-line {
+  display: flex;
+  align-items: center;
+  white-space: pre;
+}
+#prompt-line .prompt { color: var(--fg-dim); flex: 0 0 auto; }
+#cmd {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--fg-bright);
+  font: inherit;
+  caret-color: var(--fg-bright);
+  padding: 0;
+  text-shadow: inherit;
+  min-width: 0;
+}
+
+::selection { background: var(--fg); color: var(--bg); }
+
+@media (max-width: 640px) {
+  body { font-size: 13px; }
+  #screen { padding: 14px 16px; }
+}
+</style>
 </head>
-
 <body>
-  <!-- Preloader
-	 <div id="tt-preloader">
-		<div id="pre-status">
-			<div class="preload-placeholder"></div>
-		</div>
-	</div> -->
 
-  <!-- Home Section -->
-  <section id="home" class="tt-fullHeight" data-stellar-vertical-offset="50" data-stellar-background-ratio="0.2">
-    <div class="intro">
-      <div class="intro-sub">I am Lori</div>
-      <h1>Senior Backend <span>Engineer</span></h1>
-      <p>Senior Software Engineer @ 99.co<br>Go, Python, Systems at Scale<br>Building property technology serving 70M+ users</p>
-
-      <div class="social-icons">
-        <ul class="list-inline">
-          <li><a href="https://github.com/chud-lori" target="_blank"><i class="fa fa-github"></i></a></li>
-          <li><a href="https://www.linkedin.com/in/chud-lori" target="_blank"><i class="fa fa-linkedin"></i></a></li>
-          <li><a href="https://lori.my.id" target="_blank"><i class="fa fa-globe"></i></a></li>
-          <li><a href="https://chud-lori.medium.com" target="_blank"><i class="fa fa-medium"></i></a></li>
-        </ul>
-      </div> <!-- /.social-icons -->
-    </div>
-
-    <div class="mouse-icon">
-      <div class="wheel"></div>
-    </div>
-  </section><!-- End Home Section -->
-
-
-
-
-  <!-- Navigation -->
-  <header class="header">
-    <nav class="navbar navbar-custom" role="navigation">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#custom-collapse">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <!-- <a class="navbar-brand" href="index.html"><img src="assets/images/logo.png" alt=""></a> -->
-          <h3>Lori</h3>
-        </div>
-
-        <div class="collapse navbar-collapse" id="custom-collapse">
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="#home">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#experience">Experience</a></li>
-            <li><a href="#portfolio">Projects</a></li>
-            <li><a href="#skills">Skills</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-        </div>
-      </div><!-- .container -->
-    </nav>
-  </header><!-- End Navigation -->
-
-
-  <!-- About Section -->
-  <section id="about" class="about-section section-padding">
-    <div class="container">
-      <h2 class="section-title wow fadeInUp">About Me</h2>
-
-      <div class="row">
-
-        <div class="col-md-4 col-md-push-8">
-          <div class="biography">
-            <div class="myphoto">
-              <img src="assets/images/myphoto.jpg" alt="">
-            </div>
-            <ul>
-              <li><strong>Name:</strong> Lori</li>
-              <li><strong>Location:</strong> Indonesia</li>
-              <li><strong>Role:</strong> Senior Software Engineer</li>
-            </ul>
-          </div>
-        </div> <!-- col-md-4 -->
-
-        <div class="col-md-8 col-md-pull-4">
-          <div class="short-info wow fadeInUp">
-            <h3>Me</h3>
-            <p>Backend software engineer based in Indonesia. Currently a Senior Software Engineer at 99.co, developing property technology systems serving 70+ million users. Previously worked in FinTech at Kredivo (core banking) and Jublia (AI event matching). I maintain a technical blog at lori.my.id and develop side projects across multiple languages. Currently open to new opportunities.</p>
-          </div>
-
-          <div class="short-info wow fadeInUp">
-            <h3>What I Do</h3>
-            <p>I build scalable backend systems, microservices, and search infrastructure at scale.</p>
-
-            <ul class="list-check">
-              <li>Go &amp; Python</li>
-              <li>Microservices &amp; gRPC</li>
-              <li>PostgreSQL &amp; Elasticsearch</li>
-              <li>Redis &amp; RabbitMQ</li>
-              <li>AWS &amp; Kubernetes</li>
-              <li>Docker &amp; CI/CD</li>
-              <li>Observability (New Relic, Grafana)</li>
-            </ul>
-          </div>
-
-          <!-- <div class="my-signature">
-              <img src="assets/images/sign.png" alt="">
-            </div> -->
-
-          <div class="download-button">
-            <a class="btn btn-info btn-lg" href="https://lori.my.id" target="_blank"><i class="fa fa-globe"></i>Visit My Blog</a>
-            <a class="btn btn-primary btn-lg" href="https://profile.lori.my.id/" target="_blank"><i class="fa fa-user"></i>Full Profile</a>
-          </div>
-        </div>
-
-
-      </div> <!-- /.row -->
-    </div> <!-- /.container -->
-  </section><!-- End About Section -->
-
-
-  <!-- Video Section 
-    <section id="video" class="video-section">
-      <div class="tf-bg-overlay">
-
-        <div class="container">
-
-          <div class="video-intro">
-             <a class="popup-video" href="https://www.youtube.com/watch?v=LGOjcu0HRec"> <i class="fa fa-play"></i>  </a>
-             <h2>Video Introducing</h2>
-          </div>
-
-        </div>
-
-        <!--/.container
-      </div>
-      <!--/.overlay
-    </section>
-    <!-- /.Video Section -->
-
-
-  <!-- Experience Section -->
-  <section id="experience" class="resume-section section-padding">
-    <div class="container">
-      <h2 class="section-title wow fadeInUp">Experience</h2>
-
-      <div class="row">
-        <div class="col-md-12">
-          <div class="resume">
-            <ul class="timeline">
-              <li>
-                <div class="posted-date">
-                  <span class="month">Sep 2025 - Present</span>
-                </div>
-
-                <div class="timeline-panel wow fadeInUp">
-                  <div class="timeline-content">
-                    <div class="timeline-heading">
-                      <h3>Senior Software Engineer</h3>
-                      <span>99.co, Jakarta</span>
-                    </div>
-
-                    <div class="timeline-body">
-                      <p>Launched a monetized feature generating $300-$1,080/month across microservices within 2 months. Built search optimization serving 70M+ users with dynamic SEO content. Identified security vulnerability preventing ~$200k monthly revenue loss.</p>
-                    </div>
-                  </div>
-                </div>
-              </li>
-
-              <li class="timeline-inverted">
-                <div class="posted-date">
-                  <span class="month">Dec 2024 - Sep 2025</span>
-                </div>
-
-                <div class="timeline-panel wow fadeInUp">
-                  <div class="timeline-content">
-                    <div class="timeline-heading">
-                      <h3>Freelance Backend Engineer</h3>
-                      <span>Indonesia</span>
-                    </div>
-
-                    <div class="timeline-body">
-                      <p>Backend development for Indonesian Ministry application. Vocational teacher mentoring.</p>
-                    </div>
-                  </div>
-                </div>
-              </li>
-
-              <li>
-                <div class="posted-date">
-                  <span class="month">Sep - Dec 2024</span>
-                </div>
-
-                <div class="timeline-panel wow fadeInUp">
-                  <div class="timeline-content">
-                    <div class="timeline-heading">
-                      <h3>Backend Engineer</h3>
-                      <span>Kredivo, Jakarta</span>
-                    </div>
-
-                    <div class="timeline-body">
-                      <p>Core banking services for 1M+ daily active users. Achieved 67%+ unit test coverage on critical services.</p>
-                    </div>
-                  </div>
-                </div>
-              </li>
-
-              <li class="timeline-inverted">
-                <div class="posted-date">
-                  <span class="month">Jan 2022 - Aug 2024</span>
-                </div>
-
-                <div class="timeline-panel wow fadeInUp">
-                  <div class="timeline-content">
-                    <div class="timeline-heading">
-                      <h3>Backend Engineer</h3>
-                      <span>Jublia, Singapore</span>
-                    </div>
-
-                    <div class="timeline-body">
-                      <p>AI event matching platform. Implemented platform observability. Reduced load times from seconds to milliseconds.</p>
-                    </div>
-                  </div>
-                </div>
-              </li>
-
-              <li>
-                <div class="posted-date">
-                  <span class="month">Aug 2021 - Aug 2022</span>
-                </div>
-
-                <div class="timeline-panel wow fadeInUp">
-                  <div class="timeline-content">
-                    <div class="timeline-heading">
-                      <h3>Research Assistant</h3>
-                      <span>Universitas Muhammadiyah Surakarta</span>
-                    </div>
-
-                    <div class="timeline-body">
-                      <p>CNN sign-language recognition system reaching top 13 finalist status.</p>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div><!-- /row -->
-    </div><!-- /.container -->
-  </section><!-- End Experience Section -->
-
-  <!-- Projects Section -->
-  <section id="portfolio" class="skills-section section-padding">
-    <div class="container">
-      <h2 class="section-title wow fadeInUp">Projects</h2>
-
-      <div class="row">
-
-        <div class="col-md-4 col-12">
-          <div class="panel panel-default">
-            <div class="panel-body" style="color: black">
-              <h4>Ethok-Ethok</h4><br>
-              <p>Social deduction party game with 1000+ word pairs. Static SPA built with HTML, CSS, and Vanilla JS.</p>
-              <a href="https://ethok.lori.my.id" target="_blank" class="btn btn-sm btn-info">Live Demo</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4 col-12">
-          <div class="panel panel-default">
-            <div class="panel-body" style="color: black">
-              <h4>Finan App</h4><br>
-              <p>Personal finance tracker with smart categorization and planning tools. Built with Node.js and PostgreSQL.</p>
-              <a href="https://finance.lori.my.id" target="_blank" class="btn btn-sm btn-info">Live Demo</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4 col-12">
-          <div class="panel panel-default">
-            <div class="panel-body" style="color: black">
-              <h4>SinepilStream</h4><br>
-              <p>Self-hosted movie streaming aggregator with ad-blocking. Built with Express and SQLite.</p>
-              <a href="https://sinepil.lori.my.id" target="_blank" class="btn btn-sm btn-info">Live Demo</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4 col-12">
-          <div class="panel panel-default">
-            <div class="panel-body" style="color: black">
-              <h4>Go Boilerplate</h4><br>
-              <p>Production-ready Clean Architecture template with REST, gRPC, and circuit breaker patterns.</p>
-              <a href="https://github.com/chud-lori" target="_blank" class="btn btn-sm btn-default">GitHub</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4 col-12">
-          <div class="panel panel-default">
-            <div class="panel-body" style="color: black">
-              <h4>Rusty Requester</h4><br>
-              <p>Lightweight API client alternative to Postman, built with Rust and egui.</p>
-              <a href="https://github.com/chud-lori" target="_blank" class="btn btn-sm btn-default">GitHub</a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4 col-12">
-          <div class="panel panel-default">
-            <div class="panel-body" style="color: black">
-              <h4>Blog MCP Server</h4><br>
-              <p>AI-searchable knowledge base of 100+ blog posts. Built with Python and ChromaDB.</p>
-              <a href="https://github.com/chud-lori" target="_blank" class="btn btn-sm btn-default">GitHub</a>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div><!-- /.container  -->
-  </section>
-  <!-- End Projects Section -->
-
-
-
-  <!-- Skills Section -->
-  <section id="skills" class="section-padding">
-    <div class="container">
-      <h2 class="section-title wow fadeInUp">Skills</h2>
-
-      <div class="row">
-        <div class="col-md-4 col-12">
-          <div class="short-info wow fadeInUp">
-            <h3>Languages</h3>
-            <ul class="list-check">
-              <li>Go</li>
-              <li>Python</li>
-              <li>PHP</li>
-              <li>JavaScript</li>
-              <li>C</li>
-              <li>SQL</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="col-md-4 col-12">
-          <div class="short-info wow fadeInUp">
-            <h3>Backend &amp; Data</h3>
-            <ul class="list-check">
-              <li>Clean Architecture &amp; REST</li>
-              <li>gRPC &amp; Microservices</li>
-              <li>FastAPI &amp; Laravel</li>
-              <li>PostgreSQL &amp; Elasticsearch</li>
-              <li>MongoDB &amp; Redis</li>
-              <li>RabbitMQ &amp; Protobuf</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="col-md-4 col-12">
-          <div class="short-info wow fadeInUp">
-            <h3>Cloud &amp; Observability</h3>
-            <ul class="list-check">
-              <li>AWS (SQS, IVS)</li>
-              <li>Kubernetes &amp; Docker</li>
-              <li>Nginx &amp; Linux</li>
-              <li>CI/CD</li>
-              <li>New Relic &amp; Grafana/Loki</li>
-              <li>TDD &amp; SOLID Principles</li>
-            </ul>
-          </div>
-        </div>
-      </div><!-- /.row -->
-    </div><!-- /.container -->
-  </section><!-- End Skills Section -->
-
-
-
-
-  <!-- Contact Section -->
-  <section id="contact" class="contact-section section-padding">
-    <div class="container">
-      <h2 class="section-title wow fadeInUp">Get in touch</h2>
-
-      <div class="row">
-        <div class="col-md-6">
-          <p>Currently open to new opportunities. Feel free to reach out if you'd like to collaborate or discuss backend engineering, systems at scale, or anything tech.</p>
-        </div><!-- /.col-md-6 -->
-
-        <div class="col-md-6">
-          <div class="row center-xs">
-            <div class="col-sm-6">
-              <i class="fa fa-map-marker"></i>
-              <address>
-                <strong>Location</strong>
-                Indonesia<br>
-              </address>
-            </div>
-
-            <div class="col-sm-6">
-              <i class="fa fa-globe"></i>
-              <div class="contact-number">
-                <strong>Links</strong>
-                <a href="https://lori.my.id" target="_blank">Blog</a> |
-                <a href="https://github.com/chud-lori" target="_blank">GitHub</a> |
-                <a href="https://www.linkedin.com/in/chud-lori" target="_blank">LinkedIn</a>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div><!-- /.row -->
-    </div><!-- /.container -->
-  </section><!-- End Contact Section -->
-
-
-  <!-- Footer Section -->
-  <footer class="footer-wrapper">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="copyright text-center">
-            <p>&copy; 2026 Lori. Built with HTML, CSS &amp; stubbornness. <a href="https://profile.lori.my.id" target="_blank">profile.lori.my.id</a></p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </footer><!-- End Footer Section -->
-
-
-  <!-- Scroll-up -->
-  <div class="scroll-up">
-    <a href="#home"><i class="fa fa-angle-up"></i></a>
+<main id="screen" class="screen">
+  <div id="output"></div>
+  <div id="prompt-line">
+    <span class="prompt">lori@chud-lori.github.io:~$&nbsp;</span><input
+      id="cmd"
+      type="text"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      spellcheck="false"
+      aria-label="terminal input"
+    />
   </div>
+</main>
 
-  <!-- Javascript files -->
-  <script src="assets/js/jquery.js"></script>
-  <script src="assets/bootstrap/js/bootstrap.min.js"></script>
-  <script src="assets/js/jquery.stellar.min.js"></script>
-  <script src="assets/js/jquery.sticky.js"></script>
-  <script src="assets/js/smoothscroll.js"></script>
-  <script src="assets/js/wow.min.js"></script>
-  <script src="assets/js/jquery.countTo.js"></script>
-  <script src="assets/js/jquery.inview.min.js"></script>
-  <script src="assets/js/jquery.easypiechart.js"></script>
-  <script src="assets/js/jquery.shuffle.min.js"></script>
-  <script src="assets/js/jquery.magnific-popup.min.js"></script>
-  <!-- <script src="http://a.vimeocdn.com/js/froogaloop2.min.js"></script> -->
-  <script src="assets/js/jquery.fitvids.js"></script>
-  <!-- <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&amp;sensor=false"></script> -->
-  <script src="assets/js/scripts.js"></script>
+<script>
+(() => {
+  const out = document.getElementById('output');
+  const cmd = document.getElementById('cmd');
+  const screen = document.getElementById('screen');
+  const PROMPT = 'lori@chud-lori.github.io:~$&nbsp;';
+
+  const PROJECTS = {
+    'rusty-requester': {
+      url: 'https://chud-lori.github.io/rusty-requester/',
+      desc: 'native http api client. rust + egui. ~15mb binary. postman without electron.'
+    },
+    'moco': {
+      url: 'https://moco.lori.my.id/',
+      desc: 'calm reader for personal libraries. pdf / epub / md. go + sqlite.'
+    },
+    'cornela': {
+      url: 'https://github.com/chud-lori/cornela',
+      desc: 'see repo for the pitch — solo side project.'
+    },
+    'milog': {
+      url: 'https://github.com/chud-lori/milog',
+      desc: 'see repo for the pitch — solo side project.'
+    },
+    'blog-mcp': {
+      url: 'https://github.com/chud-lori/medium-blog-mcp',
+      desc: 'mcp server that turns my blog into context for claude / cursor. python + chromadb.'
+    },
+    'knn-flask': {
+      url: 'https://github.com/chud-lori/heart-disease-knn-flask',
+      desc: 'heart-disease prediction. published paper. python + flask + knn.'
+    },
+    'profile': {
+      url: 'https://profile.lori.my.id/',
+      desc: 'the real portfolio. resume, experience, projects, writing.'
+    }
+  };
+
+  const SOCIALS = {
+    email:    'reachme@lori.my.id',
+    github:   'https://github.com/chud-lori',
+    linkedin: 'https://linkedin.com/in/chud-lori/',
+    medium:   'https://chud-lori.medium.com/',
+    profile:  'https://profile.lori.my.id/',
+    blog:     'https://lori.my.id/'
+  };
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  function linkify(s) {
+    return s
+      .replace(/(https?:\/\/[^\s)]+)/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`)
+      .replace(/([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/gi, (e) => `<a href="mailto:${e}">${e}</a>`);
+  }
+
+  function print(text, cls = '') {
+    const div = document.createElement('div');
+    div.className = 'line ' + cls;
+    div.innerHTML = linkify(text === null || text === undefined ? '' : String(text));
+    out.appendChild(div);
+    scrollDown();
+  }
+
+  function printRaw(html, cls = '') {
+    const div = document.createElement('div');
+    div.className = 'line ' + cls;
+    div.innerHTML = html;
+    out.appendChild(div);
+    scrollDown();
+  }
+
+  function echoCommand(text) {
+    const div = document.createElement('div');
+    div.className = 'line echo';
+    div.innerHTML = `<span class="prompt">${PROMPT}</span><span class="cmd-text">${escapeHtml(text)}</span>`;
+    out.appendChild(div);
+  }
+
+  function scrollDown() {
+    screen.scrollTop = screen.scrollHeight;
+  }
+
+  const BOOT = [
+    '> chud-lori.os v1.0 — phosphor warmup complete',
+    '',
+    '[<span class="bright">OK</span>] mounting /home/lori .......... ok',
+    '[<span class="bright">OK</span>] loading identity ............. lori',
+    `[<span class="bright">OK</span>] indexing /projects ........... ${Object.keys(PROJECTS).length} found`,
+    '[<span class="bright">OK</span>] socials online ............... ok',
+    '',
+    '<span class="dim">you stripped the path. respect.</span>',
+    'type <span class="bright">help</span> to see what&rsquo;s here.',
+    ''
+  ];
+
+  let bootTimer = null;
+  let booted = false;
+
+  function boot() {
+    let i = 0;
+    function tick() {
+      if (i >= BOOT.length) { booted = true; cmd.focus(); return; }
+      printRaw(BOOT[i++], 'boot');
+      bootTimer = setTimeout(tick, i < 3 ? 140 : 70);
+    }
+    tick();
+  }
+
+  function skipBoot() {
+    if (booted) return;
+    clearTimeout(bootTimer);
+    out.innerHTML = '';
+    for (const l of BOOT) printRaw(l, 'boot');
+    booted = true;
+  }
+
+  const COMMANDS = {
+    help: () => printRaw([
+      'usage: <span class="bright">&lt;command&gt;</span> [arg]',
+      '',
+      '  <span class="bright">about</span>          who I am',
+      '  <span class="bright">projects</span>       what I&rsquo;ve shipped (alias: <span class="dim">ls</span>)',
+      '  <span class="bright">open &lt;name&gt;</span>    navigate to a project',
+      '  <span class="bright">contact</span>        how to reach me',
+      '  <span class="bright">whois lori</span>     formal record',
+      '  <span class="bright">uptime</span>         years coding, load avg',
+      '  <span class="bright">now</span>            what I&rsquo;m doing this month',
+      '  <span class="bright">clear</span>          clear the screen (alias: <span class="dim">cls</span>)',
+      '  <span class="bright">help</span>           this list',
+      '',
+      '<span class="dim">↑/↓ history · tab autocomplete · ctrl+l clear</span>',
+      ''
+    ].join('\n')),
+
+    about: () => print([
+      'lori (n. chudlori) — senior backend engineer @ 99.co',
+      'based in surakarta, indonesia · alumni: universitas muhammadiyah surakarta',
+      '',
+      '5+ years across go, python, javascript. now mostly rust on side projects.',
+      'shipped backends at 99.co (prop-tech, 70M+ users), kredivo (fin-tech,',
+      '1M+ DAU payments), and jublia (events + AI platforms).',
+      '',
+      'building tools to scratch my own itches. low-spec first. no electron.',
+      '',
+      'profile  : https://profile.lori.my.id/',
+      'blog     : https://lori.my.id/',
+      'github   : https://github.com/chud-lori',
+      'linkedin : https://linkedin.com/in/chud-lori/',
+      'medium   : https://chud-lori.medium.com/'
+    ].join('\n')),
+
+    whoami: () => COMMANDS.about(),
+
+    projects: () => {
+      const rows = Object.entries(PROJECTS).map(([name, p]) => {
+        const padded = (name + ' '.repeat(18)).slice(0, 18);
+        return `  <span class="bright">${padded}</span>${escapeHtml(p.desc)}`;
+      });
+      printRaw([
+        '<span class="dim">$ ls -la /projects</span>',
+        '',
+        ...rows,
+        '',
+        '<span class="dim">→ </span><span class="bright">open &lt;name&gt;</span><span class="dim"> to navigate.</span>',
+        ''
+      ].join('\n'));
+    },
+
+    ls:  () => COMMANDS.projects(),
+    dir: () => COMMANDS.projects(),
+
+    open: (args) => {
+      const name = (args[0] || '').toLowerCase();
+      if (!name) {
+        print('usage: open <project>', 'warn');
+        print('try: ' + Object.keys(PROJECTS).join(', '), 'dim');
+        return;
+      }
+      const p = PROJECTS[name];
+      if (!p) {
+        print(`no such project: ${name}`, 'err');
+        print('try: ' + Object.keys(PROJECTS).join(', '), 'dim');
+        return;
+      }
+      print(`opening ${p.url} ...`, 'dim');
+      window.open(p.url, '_blank', 'noopener');
+    },
+
+    contact: () => print([
+      'email    : ' + SOCIALS.email,
+      'github   : ' + SOCIALS.github,
+      'linkedin : ' + SOCIALS.linkedin,
+      'medium   : ' + SOCIALS.medium,
+      'location : surakarta, indonesia (UTC+7)',
+      '',
+      'best path: drop an email. low-friction, no algorithm in the way.'
+    ].join('\n')),
+
+    whois: (args) => {
+      if ((args[0] || '').toLowerCase() !== 'lori') {
+        print('whois: only `whois lori` is registered here.', 'warn');
+        return;
+      }
+      print([
+        '% whois lori',
+        '',
+        'domain        : chud-lori.os',
+        'status        : active',
+        'registered    : 1998 (give or take)',
+        'last-updated  : ' + new Date().toISOString().slice(0,10),
+        'nameserver    : coffee.lori.my.id',
+        'nameserver    : deadline.lori.my.id',
+        '',
+        'person        : lori',
+        'title         : senior backend engineer',
+        'employer      : 99.co',
+        'language      : go, python, javascript, rust',
+        'editor        : neovim (currently)',
+        'mood          : undercaffeinated'
+      ].join('\n'));
+    },
+
+    uptime: () => {
+      const years = new Date().getFullYear() - 2018;
+      print([
+        ` up: ~${years} years since first public commit`,
+        ' load average: 0.99, 1.42, 2.71',
+        ' contributing: most days, intensity varies'
+      ].join('\n'));
+    },
+
+    now: () => print([
+      'now playing  : rusty-requester (rust + egui http client)',
+      'now reading  : `crafting interpreters`, plus too many tabs',
+      'now shipping : 99.co — backend systems, search & routing',
+      'last updated : ' + new Date().toISOString().slice(0,7),
+      '',
+      '→ profile.lori.my.id has the deeper, fresher version.'
+    ].join('\n')),
+
+    clear: () => { out.innerHTML = ''; },
+    cls:   () => { out.innerHTML = ''; },
+
+    echo: (args) => print(args.join(' ')),
+
+    // --- easter eggs ---
+
+    sudo: () => print('lori is not in the sudoers file. this incident will be reported.', 'err'),
+    su:   () => COMMANDS.sudo(),
+
+    rm: () => print('nice try. this isn\'t your machine.', 'warn'),
+
+    vim:   () => print(':wq is enough. :wq! is admitting defeat.', 'dim'),
+    emacs: () => print('would print, but the keystroke combo is still loading.', 'dim'),
+    nano:  () => print('respect.', 'dim'),
+
+    coffee: () => printRaw([
+      '   <span class="dim">( ( (</span>',
+      '   <span class="dim"> ) ) )</span>',
+      '  ........',
+      '  |      |]',
+      '  \\      /',
+      '   `----\'',
+      '',
+      'brewing... <span class="bright">☕</span>'
+    ].join('\n')),
+
+    cat: (args) => {
+      const f = args[0] || '';
+      if (f === '/etc/passwd') return print('bruh.', 'warn');
+      if (f === '/dev/random') return print('░░▒▓█▓▒░ kjf3l9xq*&^%$ ░▒▓█▓▒░░', 'dim');
+      if (f === 'about.txt') return COMMANDS.about();
+      if (!f) return print('cat: missing operand', 'warn');
+      print(`cat: ${f}: no such file or directory`, 'err');
+    },
+
+    make: (args) => {
+      if (args.join(' ').toLowerCase().includes('sandwich')) {
+        return print('what? make it yourself.', 'warn');
+      }
+      print('xkcd.com/149', 'dim');
+    },
+
+    top: () => print([
+      'PID  USER  %CPU  %MEM  COMMAND',
+      '  1  lori   0.1  99.0  caffeine-daemon',
+      '  2  lori   3.2  24.0  side-projects (rust)',
+      '  3  lori   1.0   8.0  $DAYJOB (go, python)',
+      '  4  lori  47.0  12.0  meetings'
+    ].join('\n')),
+
+    ps: () => COMMANDS.top(),
+
+    exit:   () => print('there\'s no exit. only commands.', 'dim'),
+    logout: () => COMMANDS.exit(),
+    quit:   () => COMMANDS.exit(),
+
+    man: () => print('man is too lazy. try `help` instead.', 'dim'),
+
+    fortune: () => {
+      const xs = [
+        'premature optimization is the root of all evil — but un-optimization isn\'t free either.',
+        '"works on my machine" is a confession, not a defence.',
+        'low-spec first. then add complexity as required.',
+        'native > electron, when you can afford the build matrix.',
+        'every solo project is a love letter to your future self.',
+        'the bug isn\'t where you\'re looking. it never is.'
+      ];
+      print(xs[Math.floor(Math.random() * xs.length)], 'dim');
+    },
+
+    date: () => print(new Date().toString()),
+
+    hire: () => print([
+      'looking? cool.',
+      '',
+      'cv      : https://profile.lori.my.id/',
+      'email   : reachme@lori.my.id',
+      '',
+      'biased toward: backend, systems, infra-adjacent, low-bullshit teams.',
+      'not biased toward: ad-tech, dark patterns.'
+    ].join('\n'))
+  };
+
+  // Names exposed to `help` and tab-completion. Easter eggs intentionally
+  // omitted — they're discoverable only by trying real shell commands.
+  const VISIBLE = ['help','about','projects','open','contact','whois','uptime',
+                   'now','clear','cls','ls'];
+  const ALL_NAMES = Object.keys(COMMANDS);
+
+  const history = [];
+  let histIdx = -1;
+
+  function run(raw) {
+    const trimmed = raw.trim();
+    echoCommand(raw);
+    if (!trimmed) return;
+    history.unshift(trimmed);
+    histIdx = -1;
+
+    const parts = trimmed.split(/\s+/);
+    const name = parts[0].toLowerCase();
+    const args = parts.slice(1);
+    const fn = COMMANDS[name];
+    if (fn) {
+      try { fn(args); }
+      catch (e) { print('runtime error: ' + e.message, 'err'); }
+    } else {
+      print(`command not found: ${name}`, 'err');
+      print('type `help` for a list.', 'dim');
+    }
+  }
+
+  function autocomplete() {
+    const v = cmd.value;
+    if (!v) return;
+    const matches = ALL_NAMES.filter(c => c.startsWith(v.toLowerCase()));
+    if (matches.length === 0) return;
+    if (matches.length === 1) {
+      cmd.value = matches[0] + ' ';
+      return;
+    }
+    echoCommand(v);
+    printRaw(matches.join('   '), 'dim');
+  }
+
+  cmd.addEventListener('keydown', (e) => {
+    if (!booted) skipBoot();
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      run(cmd.value);
+      cmd.value = '';
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (history.length === 0) return;
+      histIdx = Math.min(histIdx + 1, history.length - 1);
+      cmd.value = history[histIdx];
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (histIdx <= 0) { histIdx = -1; cmd.value = ''; return; }
+      histIdx -= 1;
+      cmd.value = history[histIdx];
+    } else if (e.key === 'Tab') {
+      e.preventDefault();
+      autocomplete();
+    } else if (e.key === 'l' && e.ctrlKey) {
+      e.preventDefault();
+      out.innerHTML = '';
+    } else if (e.key === 'c' && e.ctrlKey) {
+      echoCommand(cmd.value + '^C');
+      cmd.value = '';
+    }
+  });
+
+  // Tap / click anywhere refocuses the prompt — important on mobile.
+  document.addEventListener('click', () => cmd.focus());
+
+  // --- konami code easter egg ----------------------------------------------
+
+  const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown',
+                  'ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+  let konamiBuf = [];
+  let amberUnlocked = false;
+
+  document.addEventListener('keydown', (e) => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    konamiBuf.push(k);
+    if (konamiBuf.length > KONAMI.length) konamiBuf.shift();
+    if (konamiBuf.length === KONAMI.length &&
+        konamiBuf.every((x, i) => x === KONAMI[i])) {
+      konamiBuf = [];
+      if (!amberUnlocked) {
+        amberUnlocked = true;
+        document.body.classList.add('amber');
+        printRaw('<span class="bright">█ phosphor color: amber █</span> <span class="dim">(welcome back to 1981)</span>');
+      } else {
+        amberUnlocked = false;
+        document.body.classList.remove('amber');
+        printRaw('<span class="bright">█ phosphor color: green █</span>');
+      }
+    }
+  });
+
+  // --- devtools easter egg -------------------------------------------------
+
+  const consoleArt = [
+    '',
+    '  ____ _                 _      _            _ ',
+    ' / ___| |__  _   _  __| |    | | ___  _ __(_)',
+    '| |   | \'_ \\| | | |/ _` |____| |/ _ \\| \'__| |',
+    '| |___| | | | |_| | (_| |____| | (_) | |  | |',
+    ' \\____|_| |_|\\__,_|\\__,_|    |_|\\___/|_|  |_|',
+    '',
+    '% you found the console.',
+    '% if you\'re reading this, you\'re my kind of dev.',
+    '% drop me a line — reachme@lori.my.id',
+    '%',
+    '% — lori'
+  ].join('\n');
+
+  console.log(
+    '%c' + consoleArt,
+    'color: #4af56b; font-family: ui-monospace, Menlo, monospace; font-size: 12px; line-height: 1.4;'
+  );
+
+  boot();
+  cmd.focus();
+})();
+</script>
+
 </body>
-
 </html>
