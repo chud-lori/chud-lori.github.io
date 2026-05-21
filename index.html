@@ -574,6 +574,78 @@ body.amber #app-pre {
     frame();
   }
 
+  function runHtop() {
+    const app = startApp('q · esc to quit');
+    if (!app) return;
+    app.center();
+    const barW = window.innerWidth < 500 ? 18 : 38;
+
+    const procs = [
+      { pid:    1, user: 'lori', cpu:  0.1, mem: 99.0, cmd: 'caffeine-daemon'   },
+      { pid:  412, user: 'lori', cpu:  3.2, mem: 24.0, cmd: 'side-projects.rs'  },
+      { pid:  891, user: 'lori', cpu:  1.0, mem:  8.0, cmd: '$DAYJOB.go'        },
+      { pid: 1024, user: 'lori', cpu: 47.0, mem: 12.0, cmd: 'meetings.zoom'     },
+      { pid: 2048, user: 'lori', cpu:  6.5, mem: 18.0, cmd: 'nvim --headless'   },
+      { pid: 4096, user: 'lori', cpu:  0.8, mem:  4.0, cmd: 'sleep-debt.sh'     },
+      { pid: 8192, user: 'lori', cpu: 12.0, mem: 14.0, cmd: 'open-tabs.firefox' }
+    ];
+
+    function jitter(v, amp) {
+      let r = v + (Math.random() * 2 - 1) * amp;
+      if (r <  0.1) r =  0.1;
+      if (r > 99.9) r = 99.9;
+      return r;
+    }
+    function bar(pct, w) {
+      const fill = Math.max(0, Math.min(w, Math.round((pct / 100) * w)));
+      return '█'.repeat(fill) + '░'.repeat(w - fill);
+    }
+    function pad(s, w, right) {
+      s = String(s);
+      return right ? s.padStart(w) : s.padEnd(w);
+    }
+
+    function frame() {
+      if (app.isStopped()) return;
+      procs.forEach(p => { p.cpu = jitter(p.cpu, 3); p.mem = jitter(p.mem, 1.2); });
+      const cpuAvg = procs.reduce((s, p) => s + p.cpu, 0) / procs.length;
+      const memAvg = procs.reduce((s, p) => s + p.mem, 0) / procs.length;
+      const l1 = cpuAvg / 25, l5 = l1 * 1.4, l15 = l1 * 2.7;
+      const lines = [
+        '  CPU [' + bar(cpuAvg, barW) + '] ' + cpuAvg.toFixed(1).padStart(4) + '%',
+        '  MEM [' + bar(memAvg, barW) + '] ' + memAvg.toFixed(1).padStart(4) + '%',
+        '',
+        '  Tasks: ' + procs.length + '   Load avg: ' + l1.toFixed(2) + ', ' + l5.toFixed(2) + ', ' + l15.toFixed(2),
+        '  Uptime: ~' + (new Date().getFullYear() - 2018) + ' years   User: lori',
+        '',
+        '   PID  USER   %CPU  %MEM  COMMAND',
+        '  ────  ─────  ────  ────  ───────────────────'
+      ];
+      const sorted = [...procs].sort((a, b) => b.cpu - a.cpu);
+      sorted.forEach(p => {
+        lines.push(
+          '  ' + pad(p.pid, 4, true) +
+          '  ' + pad(p.user, 5) +
+          '  ' + pad(p.cpu.toFixed(1), 4, true) +
+          '  ' + pad(p.mem.toFixed(1), 4, true) +
+          '  ' + p.cmd
+        );
+      });
+      app.pre.textContent = lines.join('\n');
+      setTimeout(frame, 240);
+    }
+
+    const onKey = (e) => {
+      if (e.key === 'q' || e.key === 'Escape') {
+        e.preventDefault();
+        document.removeEventListener('keydown', onKey, true);
+        app.stop();
+      }
+    };
+    document.addEventListener('keydown', onKey, true);
+    frame();
+  }
+
   function runSnake() {
     const app = startApp('arrows · q/esc quit · r retry');
     if (!app) return;
@@ -678,6 +750,9 @@ body.amber #app-pre {
       '  <span class="bright">whois lori</span>     formal record',
       '  <span class="bright">uptime</span>         years coding, load avg',
       '  <span class="bright">now</span>            what I&rsquo;m doing this month',
+      '  <span class="bright">neofetch</span>       system info card',
+      '  <span class="bright">htop</span>           live process viewer',
+      '  <span class="bright">weather</span> [loc]  current weather (default: surakarta)',
       '  <span class="bright">clear</span>          clear the screen (alias: <span class="dim">cls</span>)',
       '  <span class="bright">help</span>           this list',
       '',
@@ -978,14 +1053,76 @@ body.amber #app-pre {
     cmatrix: () => runMatrix(),
     donut:   () => runDonut(),
     sl:      () => runSL(),
-    snake:   () => runSnake()
+    snake:   () => runSnake(),
+
+    htop: () => runHtop(),
+
+    neofetch: () => {
+      const yrs = new Date().getFullYear() - 2018;
+      const ART_W = 20;
+      const art = [
+        '       ( ( (',
+        '        ) ) )',
+        '       ╭───────╮',
+        '       │       │',
+        '       │  >_   │═╮',
+        '       │       │ │',
+        '       ╰───────╯═╯'
+      ].map(l => l.padEnd(ART_W));
+      const info = [
+        '<span class="bright">lori</span><span class="dim">@chud-lori.os</span>',
+        '<span class="dim">─────────────────</span>',
+        '<span class="bright">OS</span>         : chud-lori.os 6.7 (terminal)',
+        '<span class="bright">Host</span>       : 99.co Singapore · remote/ID',
+        '<span class="bright">Kernel</span>     : v4.2-undercaffeinated',
+        '<span class="bright">Uptime</span>     : ~' + yrs + ' years (since 2018)',
+        '<span class="bright">Packages</span>   : 11 projects · 6 services',
+        '<span class="bright">Shell</span>      : bash 5.2 / zsh 5.9',
+        '<span class="bright">WM</span>         : neovim',
+        '<span class="bright">Theme</span>      : phosphor-green [konami → amber]',
+        '<span class="bright">Languages</span>  : go · python · js · c · rust',
+        '<span class="bright">CPU</span>        : caffeine-bound (1 core @ 99%)',
+        '<span class="bright">Memory</span>     : 47GB / 64GB (mostly tabs)',
+        '<span class="bright">Disk</span>       : /dev/coffee 12% used'
+      ];
+      const swatch =
+        '<span style="background:var(--fg-dim);color:var(--bg)">    </span>' +
+        '<span style="background:var(--fg);color:var(--bg)">    </span>' +
+        '<span style="background:var(--fg-bright);color:var(--bg)">    </span>' +
+        '<span style="background:var(--warn);color:var(--bg)">    </span>' +
+        '<span style="background:var(--err);color:var(--bg)">    </span>';
+      const total = Math.max(art.length, info.length);
+      const out = [];
+      for (let i = 0; i < total; i++) {
+        out.push((art[i] || ' '.repeat(ART_W)) + (info[i] || ''));
+      }
+      out.push('');
+      out.push(' '.repeat(ART_W) + swatch);
+      out.push('');
+      printRaw(out.join('\n'));
+    },
+
+    weather: async (args) => {
+      const loc = (args && args.length) ? args.join(' ') : 'Surakarta';
+      print('fetching weather for ' + loc + ' ...', 'dim');
+      try {
+        const res = await fetch('https://wttr.in/' + encodeURIComponent(loc) + '?ATq');
+        if (!res.ok) throw new Error('http ' + res.status);
+        const txt = await res.text();
+        print(txt);
+      } catch (e) {
+        print('wttr.in unreachable: ' + e.message, 'err');
+        print('try later, or visit https://wttr.in/' + encodeURIComponent(loc), 'dim');
+      }
+    }
   };
 
   // Names exposed to `help` and tab-completion. Easter eggs intentionally
   // omitted — they're discoverable only by trying real shell commands.
   const VISIBLE = ['help','about','projects','open','history','skills','services',
                    'apps','stats','blog','posts','contact','whois','uptime','now',
-                   'clear','cls','ls','matrix','donut','snake','sl'];
+                   'neofetch','htop','weather','clear','cls','ls',
+                   'matrix','donut','snake','sl'];
   const ALL_NAMES = Object.keys(COMMANDS);
 
   const history = [];
