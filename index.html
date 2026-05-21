@@ -124,6 +124,42 @@ a:hover { color: var(--bg); background: var(--fg-bright); text-decoration: none;
   body { font-size: 13px; }
   #screen { padding: 14px 16px; }
 }
+
+/* Fullscreen overlay used by matrix / donut / snake / sl. */
+#app-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 4;
+  overflow: hidden;
+  padding: 20px;
+}
+#app-pre {
+  font: inherit;
+  font-size: inherit;
+  line-height: 1.05;
+  color: var(--fg);
+  white-space: pre;
+  margin: 0;
+  text-shadow: 0 0 6px rgba(74, 245, 107, 0.35);
+}
+body.amber #app-pre {
+  text-shadow: 0 0 6px rgba(255, 180, 84, 0.4);
+}
+.mx-h { color: var(--fg-bright); filter: brightness(1.3); }
+.mx-m { color: var(--fg); }
+.mx-d { color: var(--fg-dim); opacity: 0.75; }
+#app-hint {
+  position: fixed;
+  bottom: 12px;
+  right: 16px;
+  z-index: 5;
+  color: var(--fg-dim);
+  font-family: var(--font);
+  font-size: 11px;
+  pointer-events: none;
+  opacity: 0.8;
+}
 </style>
 </head>
 <body>
@@ -279,6 +315,295 @@ a:hover { color: var(--bg); background: var(--fg-bright); text-decoration: none;
     booted = true;
   }
 
+  // ─── fullscreen apps: matrix / donut / snake / sl ─────────────────────
+
+  let currentApp = null;
+
+  function startApp(hintText) {
+    if (currentApp) return null;
+    const overlay = document.createElement('div');
+    overlay.id = 'app-overlay';
+    const pre = document.createElement('pre');
+    pre.id = 'app-pre';
+    overlay.appendChild(pre);
+    document.body.appendChild(overlay);
+    let hint = null;
+    if (hintText) {
+      hint = document.createElement('div');
+      hint.id = 'app-hint';
+      hint.textContent = hintText;
+      document.body.appendChild(hint);
+    }
+    cmd.disabled = true;
+    document.getElementById('prompt-line').style.display = 'none';
+    let stopped = false;
+    const app = {
+      overlay, pre,
+      isStopped: () => stopped,
+      center() {
+        overlay.style.display = 'grid';
+        overlay.style.placeItems = 'center';
+      },
+      stop() {
+        if (stopped) return;
+        stopped = true;
+        overlay.remove();
+        if (hint) hint.remove();
+        document.getElementById('prompt-line').style.display = '';
+        cmd.disabled = false;
+        currentApp = null;
+        cmd.focus();
+      }
+    };
+    currentApp = app;
+    return app;
+  }
+
+  function runMatrix() {
+    const app = startApp('any key to exit');
+    if (!app) return;
+    const cw = 10, lh = 16;
+    const cols = Math.max(30, Math.floor((window.innerWidth  - 40) / cw));
+    const rows = Math.max(15, Math.floor((window.innerHeight - 40) / lh));
+    const G = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝ0123456789';
+    const drops = Array(cols).fill(0).map(() => Math.floor(Math.random() * -rows * 2));
+    const TRAIL = 14;
+
+    function frame() {
+      if (app.isStopped()) return;
+      const head = new Uint8Array(rows * cols);
+      const mid  = new Uint8Array(rows * cols);
+      const dim  = new Uint8Array(rows * cols);
+      for (let c = 0; c < cols; c++) {
+        const h = drops[c];
+        for (let t = 0; t < TRAIL; t++) {
+          const r = h - t;
+          if (r < 0 || r >= rows) continue;
+          const idx = r * cols + c;
+          if (t === 0)      head[idx] = 1;
+          else if (t < 3)   head[idx] = 1;
+          else if (t < 8)   mid[idx]  = 1;
+          else              dim[idx]  = 1;
+        }
+      }
+      let html = '';
+      let cur = '';
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const idx = r * cols + c;
+          let cls = '';
+          if (head[idx])      cls = 'mx-h';
+          else if (mid[idx])  cls = 'mx-m';
+          else if (dim[idx])  cls = 'mx-d';
+          if (cls !== cur) {
+            if (cur !== '') html += '</span>';
+            if (cls !== '') html += '<span class="' + cls + '">';
+            cur = cls;
+          }
+          html += cls === '' ? ' ' : G[(Math.random() * G.length) | 0];
+        }
+        if (cur !== '') { html += '</span>'; cur = ''; }
+        html += '\n';
+      }
+      app.pre.innerHTML = html;
+      for (let c = 0; c < cols; c++) {
+        drops[c]++;
+        if (drops[c] - TRAIL > rows && Math.random() < 0.06) {
+          drops[c] = -Math.floor(Math.random() * 8);
+        }
+      }
+      setTimeout(frame, 70);
+    }
+
+    const onKey = (e) => {
+      e.preventDefault();
+      app.stop();
+    };
+    document.addEventListener('keydown', onKey, { once: true, capture: true });
+    frame();
+  }
+
+  function runDonut() {
+    const app = startApp('any key to exit');
+    if (!app) return;
+    app.center();
+    const W = 60, H = 28;
+    let A = 0, B = 0;
+
+    function frame() {
+      if (app.isStopped()) return;
+      const b = new Array(W * H).fill(' ');
+      const z = new Float32Array(W * H);
+      for (let j = 0; j < 6.28; j += 0.07) {
+        const d = Math.cos(j), f = Math.sin(j);
+        for (let i = 0; i < 6.28; i += 0.02) {
+          const c = Math.sin(i), l = Math.cos(i);
+          const e = Math.sin(A), g = Math.cos(A);
+          const m = Math.cos(B), n = Math.sin(B);
+          const h = d + 2;
+          const D = 1 / (c * h * e + f * g + 5);
+          const t = c * h * g - f * e;
+          const x = Math.floor(W / 2 + (W * 0.42) * D * (l * h * m - t * n));
+          const y = Math.floor(H / 2 + (H * 0.42) * D * (l * h * n + t * m));
+          const N = Math.floor(8 * ((f * e - c * d * g) * m - c * d * e - f * g - l * d * n));
+          if (y >= 0 && y < H && x >= 0 && x < W) {
+            const o = x + W * y;
+            if (D > z[o]) { z[o] = D; b[o] = '.,-~:;=!*#$@'[N > 0 ? N : 0]; }
+          }
+        }
+      }
+      let out = '';
+      for (let k = 0; k < H; k++) out += b.slice(k * W, (k + 1) * W).join('') + '\n';
+      app.pre.textContent = out;
+      A += 0.05;
+      B += 0.025;
+      setTimeout(frame, 50);
+    }
+
+    const onKey = (e) => {
+      e.preventDefault();
+      app.stop();
+    };
+    document.addEventListener('keydown', onKey, { once: true, capture: true });
+    frame();
+  }
+
+  function runSL() {
+    const app = startApp('ctrl+c / esc to abort');
+    if (!app) return;
+    const train = [
+      '      ====        ________                ___________',
+      '  _D _|  |_______/        \\__I_I_____===__|_________|',
+      '   |(_)---  |   H\\________/ |   |        =|___ ___|  ',
+      '   /     |  |   H  |  |     |   |         ||_| |_||  ',
+      '  |      |  |   H  |__--------------------| [___] |  ',
+      '  | ________|___H__/__|_____/[][]~\\_______|       |  ',
+      '  |/ |   |-----------I_____I [][] []  D   |=======|__',
+      '__/ =| o |=-~~\\  /~~\\  /~~\\  /~~\\ ____Y___________|__',
+      ' |/-=|___|=    ||    ||    ||    |_____/~\\___/       ',
+      '  \\_/      \\_O=O=O=O=O=O_/      \\_/                  '
+    ];
+    const tw = train[0].length;
+    const cols = Math.max(80, Math.floor((window.innerWidth  - 40) /  9));
+    const rows = Math.max(20, Math.floor((window.innerHeight - 40) / 18));
+    const topPad = Math.max(0, Math.floor((rows - train.length) / 2));
+    let x = cols;
+
+    function frame() {
+      if (app.isStopped()) return;
+      const lines = train.map(line => {
+        let r = '';
+        for (let c = 0; c < cols; c++) {
+          const tc = c - x;
+          r += (tc >= 0 && tc < tw) ? line[tc] : ' ';
+        }
+        return r;
+      });
+      app.pre.textContent = '\n'.repeat(topPad) + lines.join('\n');
+      x -= 2;
+      if (x + tw < 0) { app.stop(); return; }
+      setTimeout(frame, 60);
+    }
+
+    const onKey = (e) => {
+      if ((e.key === 'c' && e.ctrlKey) || e.key === 'Escape' || e.key === 'q') {
+        e.preventDefault();
+        document.removeEventListener('keydown', onKey, true);
+        app.stop();
+      }
+    };
+    document.addEventListener('keydown', onKey, true);
+    frame();
+  }
+
+  function runSnake() {
+    const app = startApp('arrows · q/esc quit · r retry');
+    if (!app) return;
+    app.center();
+    const W = 24, H = 14;
+    let snake, dir, pending, food, score, alive, speed;
+
+    function spawnFood() {
+      while (true) {
+        const f = [Math.floor(Math.random() * W), Math.floor(Math.random() * H)];
+        if (!snake.some(s => s[0] === f[0] && s[1] === f[1])) return f;
+      }
+    }
+    function reset() {
+      snake = [[Math.floor(W / 2), Math.floor(H / 2)]];
+      dir = [1, 0]; pending = dir;
+      food = spawnFood();
+      score = 0; alive = true; speed = 130;
+    }
+    reset();
+
+    function render() {
+      const lines = [];
+      lines.push('┌' + '─'.repeat(W * 2) + '┐');
+      for (let y = 0; y < H; y++) {
+        let line = '│';
+        for (let x = 0; x < W; x++) {
+          const isHead = snake[0][0] === x && snake[0][1] === y;
+          const isBody = !isHead && snake.some(s => s[0] === x && s[1] === y);
+          const isFood = food[0] === x && food[1] === y;
+          if      (isHead) line += '██';
+          else if (isBody) line += '▓▓';
+          else if (isFood) line += '●●';
+          else             line += '  ';
+        }
+        lines.push(line + '│');
+      }
+      lines.push('└' + '─'.repeat(W * 2) + '┘');
+      lines.push('');
+      lines.push(alive
+        ? ' score: ' + String(score).padStart(4, '0')
+        : ' GAME OVER · score: ' + String(score).padStart(4, '0') + '  [r] retry');
+      app.pre.textContent = lines.join('\n');
+    }
+
+    function step() {
+      if (app.isStopped()) return;
+      if (alive) {
+        dir = pending;
+        const head = [snake[0][0] + dir[0], snake[0][1] + dir[1]];
+        if (head[0] < 0 || head[0] >= W || head[1] < 0 || head[1] >= H ||
+            snake.some(s => s[0] === head[0] && s[1] === head[1])) {
+          alive = false;
+        } else {
+          snake.unshift(head);
+          if (head[0] === food[0] && head[1] === food[1]) {
+            score += 10;
+            speed = Math.max(60, speed - 3);
+            food = spawnFood();
+          } else {
+            snake.pop();
+          }
+        }
+      }
+      render();
+      setTimeout(step, alive ? speed : 220);
+    }
+
+    const onKey = (e) => {
+      const k = e.key;
+      if (k === 'q' || k === 'Escape') {
+        e.preventDefault();
+        document.removeEventListener('keydown', onKey, true);
+        app.stop();
+        return;
+      }
+      if (k === 'r' && !alive) { e.preventDefault(); reset(); return; }
+      if (!alive) return;
+      if (k === 'ArrowUp'    && dir[1] !==  1) { e.preventDefault(); pending = [ 0, -1]; }
+      if (k === 'ArrowDown'  && dir[1] !== -1) { e.preventDefault(); pending = [ 0,  1]; }
+      if (k === 'ArrowLeft'  && dir[0] !==  1) { e.preventDefault(); pending = [-1,  0]; }
+      if (k === 'ArrowRight' && dir[0] !== -1) { e.preventDefault(); pending = [ 1,  0]; }
+    };
+    document.addEventListener('keydown', onKey, true);
+    render();
+    step();
+  }
+
   const COMMANDS = {
     help: () => printRaw([
       'usage: <span class="bright">&lt;command&gt;</span> [arg]',
@@ -297,6 +622,12 @@ a:hover { color: var(--bg); background: var(--fg-bright); text-decoration: none;
       '  <span class="bright">now</span>            what I&rsquo;m doing this month',
       '  <span class="bright">clear</span>          clear the screen (alias: <span class="dim">cls</span>)',
       '  <span class="bright">help</span>           this list',
+      '',
+      '  <span class="dim">// fun</span>',
+      '  <span class="bright">matrix</span>         green code rain (any key to exit)',
+      '  <span class="bright">donut</span>          spinning ascii torus (any key to exit)',
+      '  <span class="bright">snake</span>          play snake (arrows · q to quit)',
+      '  <span class="bright">sl</span>             steam locomotive (a typo for <span class="dim">ls</span>)',
       '',
       '<span class="dim">↑/↓ history · tab autocomplete · ctrl+l clear</span>',
       ''
@@ -579,14 +910,21 @@ a:hover { color: var(--bg); background: var(--fg-bright); text-decoration: none;
       '',
       'biased toward: backend, systems, infra-adjacent, low-bullshit teams.',
       'not biased toward: ad-tech, dark patterns.'
-    ].join('\n'))
+    ].join('\n')),
+
+    // --- animations & games ---
+    matrix:  () => runMatrix(),
+    cmatrix: () => runMatrix(),
+    donut:   () => runDonut(),
+    sl:      () => runSL(),
+    snake:   () => runSnake()
   };
 
   // Names exposed to `help` and tab-completion. Easter eggs intentionally
   // omitted — they're discoverable only by trying real shell commands.
   const VISIBLE = ['help','about','projects','open','history','skills','services',
                    'apps','stats','blog','posts','contact','whois','uptime','now',
-                   'clear','cls','ls'];
+                   'clear','cls','ls','matrix','donut','snake','sl'];
   const ALL_NAMES = Object.keys(COMMANDS);
 
   const history = [];
