@@ -149,6 +149,22 @@ body.amber #app-pre {
 .mx-h { color: var(--fg-bright); filter: brightness(1.3); }
 .mx-m { color: var(--fg); }
 .mx-d { color: var(--fg-dim); opacity: 0.75; }
+
+/* CRT power-off / power-on, used by the `exit` command. */
+#screen.crt-off { animation: crt-shutoff 0.9s ease-in forwards; transform-origin: 50% 50%; }
+#screen.crt-on  { animation: crt-poweron 0.8s ease-out forwards; transform-origin: 50% 50%; }
+@keyframes crt-shutoff {
+  0%   { transform: scaleY(1)     scaleX(1);     filter: brightness(1); }
+  40%  { transform: scaleY(0.005) scaleX(1);     filter: brightness(2.5); }
+  75%  { transform: scaleY(0.005) scaleX(0.005); filter: brightness(6); opacity: 1; }
+  100% { transform: scaleY(0)     scaleX(0);     filter: brightness(0); opacity: 0; }
+}
+@keyframes crt-poweron {
+  0%   { transform: scaleY(0)     scaleX(0);     opacity: 0; filter: brightness(0); }
+  25%  { transform: scaleY(0.005) scaleX(0.005); opacity: 1; filter: brightness(6); }
+  60%  { transform: scaleY(0.005) scaleX(1);     opacity: 1; filter: brightness(2.5); }
+  100% { transform: scaleY(1)     scaleX(1);     opacity: 1; filter: brightness(1); }
+}
 #app-hint {
   position: fixed;
   bottom: 12px;
@@ -313,6 +329,48 @@ body.amber #app-pre {
     out.innerHTML = '';
     for (const l of BOOT) printRaw(l, 'boot');
     booted = true;
+  }
+
+  // ─── exit: confirm + crt power-off / power-on ─────────────────────────
+
+  let pendingExitConfirm = false;
+
+  function runExitAnimation() {
+    const screen = document.getElementById('screen');
+    if (screen.dataset.exiting === '1') return;
+    screen.dataset.exiting = '1';
+    cmd.disabled = true;
+
+    const lines = [
+      '<span class="warn">shutting down chud-lori.os ...</span>',
+      '[<span class="bright">--</span>] saving session state ............ ok',
+      '[<span class="bright">--</span>] stopping caffeine-daemon ......... ok',
+      '[<span class="bright">--</span>] flushing thoughts to /dev/null ... ok',
+      '[<span class="bright">--</span>] closing 47 open tabs ............. <span class="warn">deferred</span>',
+      '<span class="dim">powering off display ...</span>'
+    ];
+    lines.forEach((l, i) => setTimeout(() => printRaw(l), i * 160));
+    const settled = lines.length * 160;
+
+    setTimeout(() => { screen.classList.add('crt-off'); }, settled + 120);
+
+    setTimeout(() => {
+      printRaw('');
+      printRaw('<span class="bright">...just kidding.</span>');
+      printRaw('<span class="dim">there&rsquo;s no exit. only commands.</span>');
+      printRaw('<span class="dim">welcome back. try `</span><span class="bright">help</span><span class="dim">` again.</span>');
+      printRaw('');
+      scrollDown();
+      screen.classList.remove('crt-off');
+      screen.classList.add('crt-on');
+    }, settled + 1100);
+
+    setTimeout(() => {
+      screen.classList.remove('crt-on');
+      screen.dataset.exiting = '';
+      cmd.disabled = false;
+      cmd.focus();
+    }, settled + 2000);
   }
 
   // ─── fullscreen apps: matrix / donut / snake / sl ─────────────────────
@@ -882,7 +940,10 @@ body.amber #app-pre {
 
     ps: () => COMMANDS.top(),
 
-    exit:   () => print('there\'s no exit. only commands.', 'dim'),
+    exit: () => {
+      pendingExitConfirm = true;
+      printRaw('<span class="warn">exit terminal?</span> <span class="dim">[y/N]</span>');
+    },
     logout: () => COMMANDS.exit(),
     quit:   () => COMMANDS.exit(),
 
@@ -933,6 +994,18 @@ body.amber #app-pre {
   function run(raw) {
     const trimmed = raw.trim();
     echoCommand(raw);
+
+    if (pendingExitConfirm) {
+      pendingExitConfirm = false;
+      const v = trimmed.toLowerCase();
+      if (v === 'y' || v === 'yes') {
+        runExitAnimation();
+      } else {
+        print('wise choice.', 'dim');
+      }
+      return;
+    }
+
     if (!trimmed) return;
     history.unshift(trimmed);
     histIdx = -1;
