@@ -155,17 +155,33 @@ a:hover { color: var(--bg); background: var(--fg-bright); text-decoration: none;
       url: 'https://chud-lori.github.io/rusty-requester/',
       desc: 'native http api client. rust + egui. ~15mb binary. postman without electron.'
     },
+    'go-boilerplate': {
+      url: 'https://github.com/chud-lori/go-boilerplate',
+      desc: 'production-ready go service template. clean arch, rest + grpc, redis, testcontainers, ci.'
+    },
     'moco': {
       url: 'https://moco.lori.my.id/',
-      desc: 'calm reader for personal libraries. pdf / epub / md. go + sqlite.'
+      desc: 'calm reader for personal libraries. pdf / epub / md. go + sqlite + optional r2.'
     },
     'cornela': {
       url: 'https://github.com/chud-lori/cornela',
-      desc: 'see repo for the pitch — solo side project.'
+      desc: 'container kernel auditor. rust + ebpf + c. flags shared-kernel escape risk on linux.'
     },
     'milog': {
       url: 'https://github.com/chud-lori/milog',
-      desc: 'see repo for the pitch — solo side project.'
+      desc: 'single-file bash monitor for nginx + host. optional ebpf sidecar. alerts to discord/slack/telegram/matrix.'
+    },
+    'cendek': {
+      url: 'https://github.com/chud-lori/cendek',
+      desc: 'dependency-free rust url shortener. one binary + a tsv file. no db, no orm, no framework.'
+    },
+    'sinau': {
+      url: 'https://github.com/chud-lori/sinau',
+      desc: 'invite-only mentor/teacher tracker. mentorship rooms + classrooms in one app. go + sqlite.'
+    },
+    'finan-app': {
+      url: 'https://finance.lori.my.id/',
+      desc: 'private finance tracker. anomaly alerts + "can i afford this?" tools. node + postgres.'
     },
     'blog-mcp': {
       url: 'https://github.com/chud-lori/medium-blog-mcp',
@@ -270,6 +286,11 @@ a:hover { color: var(--bg); background: var(--fg-bright); text-decoration: none;
       '  <span class="bright">about</span>          who I am',
       '  <span class="bright">projects</span>       what I&rsquo;ve shipped (alias: <span class="dim">ls</span>)',
       '  <span class="bright">open &lt;name&gt;</span>    navigate to a project',
+      '  <span class="bright">history</span>        career timeline',
+      '  <span class="bright">skills</span>         tech stack',
+      '  <span class="bright">services</span>       deployed live web apps (alias: <span class="dim">apps</span>)',
+      '  <span class="bright">stats</span>          selected wins',
+      '  <span class="bright">blog</span>           recent writing (alias: <span class="dim">posts</span>)',
       '  <span class="bright">contact</span>        how to reach me',
       '  <span class="bright">whois lori</span>     formal record',
       '  <span class="bright">uptime</span>         years coding, load avg',
@@ -340,10 +361,98 @@ a:hover { color: var(--bg); background: var(--fg-bright); text-decoration: none;
       'github   : ' + SOCIALS.github,
       'linkedin : ' + SOCIALS.linkedin,
       'medium   : ' + SOCIALS.medium,
-      'location : indonesia',
+      'location : surakarta, indonesia',
       '',
       'best path: drop an email. low-friction, no algorithm in the way.'
     ].join('\n')),
+
+    history: () => printRaw([
+      '<span class="dim">$ history | tail -n 30</span>',
+      '',
+      '  <span class="bright">2025-09 → now      </span> senior backend engineer · 99.co singapore',
+      '                       <span class="dim">proptech for sg &amp; id. 20M+ users.</span>',
+      '                       <span class="dim">shipped a $300–$1,080/mo paid feature solo in &lt;2 months</span>',
+      '                       <span class="dim">across 6+ microservices with atomic payment processing.</span>',
+      '                       <span class="dim">replaced legacy commute backend with self-hosted valhalla</span>',
+      '                       <span class="dim">+ gtfs transit routing over singapore osm.</span>',
+      '                       <span class="dim">closed a credit vuln → ~$200k/mo revenue leak prevented.</span>',
+      '',
+      '  <span class="bright">2024-12 → 2025-09  </span> software engineer · freelance · remote',
+      '                       <span class="dim">backend for an indonesian ministry application.</span>',
+      '                       <span class="dim">mentored vocational-school teachers on laravel + rest.</span>',
+      '',
+      '  <span class="bright">2024-09 → 2024-12  </span> software engineer · kredivo · jakarta',
+      '                       <span class="dim">core banking squad. payments for 1M+ DAU.</span>',
+      '                       <span class="dim">drove unit-test coverage past 67%. aws sqs event-driven infra.</span>',
+      '',
+      '  <span class="bright">2022-01 → 2024-08  </span> software engineer · jublia · remote',
+      '                       <span class="dim">observability rollout: load times seconds → ms.</span>',
+      '                       <span class="dim">amazon ivs livestream-to-vod pipeline.</span>',
+      '                       <span class="dim">rag system w/ fastapi + opensearch + langchain / llamaindex.</span>',
+      '                       <span class="dim">1st place — jublia internal hackathon (2023).</span>',
+      '',
+      '  <span class="bright">2021-08 → 2022-08  </span> research assistant · universitas muhammadiyah surakarta',
+      '                       <span class="dim">cnn sign-language recognition (tensorflow, ~70% acc).</span>',
+      '                       <span class="dim">top 13 finalist / 100s — NIICe national competition.</span>',
+      ''
+    ].join('\n')),
+
+    skills: () => printRaw([
+      '<span class="dim">$ apt list --installed | grep -v auto</span>',
+      '',
+      '  <span class="bright">languages    </span> go, python, javascript, php, c, sql, rust',
+      '  <span class="bright">backend      </span> clean architecture, rest, grpc, microservices, fastapi, laravel, circuit breakers',
+      '  <span class="bright">data         </span> postgresql, elasticsearch, mongodb, redis, rabbitmq, protobuf',
+      '  <span class="bright">cloud / infra</span> aws (sqs, ivs), kubernetes, docker, nginx, linux, ci/cd',
+      '  <span class="bright">obs / ai     </span> new relic, grafana / loki, langchain, llamaindex, rag, tensorflow',
+      '  <span class="bright">practices    </span> solid, tdd, security / ctf, code review, mentoring',
+      ''
+    ].join('\n')),
+
+    services: () => printRaw([
+      '<span class="dim">$ systemctl list-units --type=service --state=running</span>',
+      '',
+      '  UNIT             ADDR                                                                                            DESCRIPTION',
+      '  <span class="bright">moco.service     </span> <a href="https://moco.lori.my.id/" target="_blank" rel="noopener">moco.lori.my.id</a>      calm private reader · pdf / epub / md',
+      '  <span class="bright">finance.service  </span> <a href="https://finance.lori.my.id/" target="_blank" rel="noopener">finance.lori.my.id</a>   personal finance tracker',
+      '  <span class="bright">sinepil.service  </span> <a href="https://sinepil.lori.my.id/" target="_blank" rel="noopener">sinepil.lori.my.id</a>   watch movies without ads',
+      '  <span class="bright">dolanan.service  </span> <a href="https://dolanan.lori.my.id/" target="_blank" rel="noopener">dolanan.lori.my.id</a>   offline-first hub of casual party games',
+      '  <span class="bright">ethok.service    </span> <a href="https://ethok.lori.my.id/" target="_blank" rel="noopener">ethok.lori.my.id</a>     social deduction party game',
+      '  <span class="bright">ldr.service      </span> <a href="https://ldr.lori.my.id/" target="_blank" rel="noopener">ldr.lori.my.id</a>       platform for long-distance relationships',
+      '',
+      '  <span class="dim">all loaded, all active.</span>',
+      ''
+    ].join('\n')),
+
+    apps: () => COMMANDS.services(),
+
+    stats: () => print([
+      'selected wins:',
+      '',
+      ' [+] 20M+ users served at 99.co (proptech, sg & id)',
+      ' [+] 1M+ DAU payments processed (kredivo, core banking)',
+      ' [+] ~$200k/mo revenue leak closed via a security fix',
+      ' [+] 6+ microservices shipped solo for a $300-$1,080/mo paid feature',
+      ' [+] seconds → milliseconds on jublia event app (post-observability rollout)',
+      ' [+] 1st place — jublia internal hackathon (2023)',
+      ' [+] top 13 / 100s — NIICe national innovation competition'
+    ].join('\n')),
+
+    blog: () => printRaw([
+      '<span class="dim">$ tail -n 6 ~/blog/posts.log</span>',
+      '',
+      '  <span class="dim">[2026-05]</span> <a href="https://lori.my.id/posts/copy-fail-cornela/" target="_blank" rel="noopener">copy fail, containers, and cornela: detecting shared-kernel risk</a>',
+      '  <span class="dim">[2026-03]</span> <a href="https://lori.my.id/posts/system-operator-shift/" target="_blank" rel="noopener">the "system operator" shift: why ai agents won&rsquo;t replace senior engineers</a>',
+      '  <span class="dim">[2025-08]</span> <a href="https://lori.my.id/posts/memory-locality-go/" target="_blank" rel="noopener">memory locality: optimize your go code</a>',
+      '  <span class="dim">[2025-01]</span> <a href="https://lori.my.id/posts/observability-log-pipeline/" target="_blank" rel="noopener">building an observability pipeline for go with grafana, loki &amp; promtail</a>',
+      '  <span class="dim">[2025-01]</span> <a href="https://lori.my.id/posts/hashmap-chain-open/" target="_blank" rel="noopener">hashmap: separate chaining vs open addressing</a>',
+      '  <span class="dim">[2025-01]</span> <a href="https://lori.my.id/posts/why-signed-unsigned-comparison/" target="_blank" rel="noopener">why signed -10 &gt; unsigned 5 in C</a>',
+      '',
+      '  <span class="dim">→ more at</span> <a href="https://lori.my.id/" target="_blank" rel="noopener">https://lori.my.id/</a>',
+      ''
+    ].join('\n')),
+
+    posts: () => COMMANDS.blog(),
 
     whois: (args) => {
       if ((args[0] || '').toLowerCase() !== 'lori') {
@@ -363,7 +472,9 @@ a:hover { color: var(--bg); background: var(--fg-bright); text-decoration: none;
         'person        : lori',
         'title         : senior backend engineer',
         'employer      : 99.co',
-        'language      : go, python, javascript, c',
+        'location      : surakarta, indonesia',
+        'alumni-of     : universitas muhammadiyah surakarta',
+        'language      : go, python, javascript, c, rust',
         'editor        : neovim (currently)',
         'mood          : undercaffeinated'
       ].join('\n'));
@@ -473,8 +584,9 @@ a:hover { color: var(--bg); background: var(--fg-bright); text-decoration: none;
 
   // Names exposed to `help` and tab-completion. Easter eggs intentionally
   // omitted — they're discoverable only by trying real shell commands.
-  const VISIBLE = ['help','about','projects','open','contact','whois','uptime',
-                   'now','clear','cls','ls'];
+  const VISIBLE = ['help','about','projects','open','history','skills','services',
+                   'apps','stats','blog','posts','contact','whois','uptime','now',
+                   'clear','cls','ls'];
   const ALL_NAMES = Object.keys(COMMANDS);
 
   const history = [];
